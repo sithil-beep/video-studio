@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipStudio Pro - Animated Video Creator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['"Fredoka One"', 'cursive'],
+                        orbitron: ['"Orbitron"', 'sans-serif'],
+                        montserrat: ['"Montserrat"', 'sans-serif'],
+                        poppins: ['"Poppins"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Montserrat:wght@700;900&family=Orbitron:wght@600;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .tab-btn.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+            border-color: #6366f1;
+        }
+
+        /* Canvas Wrapper Aspect Ratio Container */
+        .canvas-container {
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col bg-slate-950 text-slate-100 antialiased select-none">
+
+    <header class="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-clapperboard text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wider text-white font-montserrat flex items-center gap-2">
+                    CLIPSTUDIO <span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full font-sans">PRO v2.0</span>
+                </h1>
+                <p class="text-[11px] text-slate-400">HTML5 Canvas Motion Graphics & Video Export Studio</p>
+            </div>
+        </div>
+
+        <!-- Canvas Aspect Ratio & Preset Quick Switch -->
+        <div class="flex items-center gap-3 bg-slate-800/80 p-1 rounded-lg border border-slate-700/60 text-xs">
+            <span class="text-slate-400 px-2 font-medium">Format:</span>
+            <button id="resLandscapeBtn" class="px-3 py-1.5 rounded-md font-semibold transition-all bg-indigo-600 text-white shadow">
+                <i class="fa-solid fa-desktop mr-1"></i> 16:9 YouTube (1080p)
+            </button>
+            <button id="resPortraitBtn" class="px-3 py-1.5 rounded-md font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-700">
+                <i class="fa-solid fa-mobile-screen mr-1"></i> 9:16 Shorts/TikTok
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div id="audioStatusBadge" class="hidden items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-1 rounded-full">
+                <i class="fa-solid fa-music"></i> Audio Synced
+            </div>
+            <button id="quickExportBtn" class="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-all shadow-md shadow-indigo-500/20 flex items-center gap-2">
+                <i class="fa-solid fa-file-video text-sm"></i> Export Video
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- LEFT SIDEBAR: Control Panels Tabs -->
+        <aside class="w-96 border-r border-slate-800 bg-slate-900/60 flex flex-col shrink-0">
+            
+            <!-- Navigation Tabs -->
+            <div class="grid grid-cols-4 border-b border-slate-800 bg-slate-950/40 p-1 gap-1 text-xs font-medium">
+                <button class="tab-btn active py-2.5 rounded-md flex flex-col items-center gap-1 transition-all" data-tab="tab-templates">
+                    <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                    <span>Presets</span>
+                </button>
+                <button class="tab-btn py-2.5 rounded-md text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all" data-tab="tab-text">
+                    <i class="fa-solid fa-font text-sm"></i>
+                    <span>Text/Logo</span>
+                </button>
+                <button class="tab-btn py-2.5 rounded-md text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all" data-tab="tab-background">
+                    <i class="fa-solid fa-image text-sm"></i>
+                    <span>Visuals</span>
+                </button>
+                <button class="tab-btn py-2.5 rounded-md text-slate-400 hover:text-slate-200 flex flex-col items-center gap-1 transition-all" data-tab="tab-audio">
+                    <i class="fa-solid fa-compact-disc text-sm"></i>
+                    <span>Audio</span>
+                </button>
+            </div>
+
+            <!-- TAB CONTENTS -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+
+                <!-- 1. TEMPLATES / PRESETS TAB -->
+                <div id="tab-templates" class="tab-content space-y-5">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Choose Theme Preset</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        
+                        <!-- Kids / Happy Children's Day Preset -->
+                        <div class="preset-card bg-slate-800/60 hover:bg-slate-800 border-2 border-indigo-500/80 rounded-xl p-3.5 cursor-pointer transition-all flex items-center gap-3.5 group" data-preset="children">
+                            <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-pink-400 via-yellow-300 to-sky-400 flex items-center justify-center text-slate-900 font-bold text-xl shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-child-reaching"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-white group-hover:text-pink-400 transition-colors">Happy Children's Day</h4>
+                                <p class="text-xs text-slate-400 truncate">Balloons, confetti, smiling sun & bouncy fonts</p>
+                            </div>
+                        </div>
+
+                        <!-- Gaming Synthwave / Cyber Intro -->
+                        <div class="preset-card bg-slate-800/40 hover:bg-slate-800 border-2 border-slate-700/60 rounded-xl p-3.5 cursor-pointer transition-all flex items-center gap-3.5 group" data-preset="gaming">
+                            <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-fuchsia-600 to-cyan-400 flex items-center justify-center text-white font-bold text-xl shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-gamepad"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">Cyberpunk / Gaming Intro</h4>
+                                <p class="text-xs text-slate-400 truncate">3D Perspective grid, neon glowing cyber graphics</p>
+                            </div>
+                        </div>
+
+                        <!-- Cinematic Minimal Banner -->
+                        <div class="preset-card bg-slate-800/40 hover:bg-slate-800 border-2 border-slate-700/60 rounded-xl p-3.5 cursor-pointer transition-all flex items-center gap-3.5 group" data-preset="cinematic">
+                            <div class="w-12 h-12 rounded-lg bg-gradient-to-tr from-amber-500 to-slate-900 flex items-center justify-center text-amber-300 font-bold text-xl shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-film"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">Cinematic Gold Title</h4>
+                                <p class="text-xs text-slate-400 truncate">Elegant luxury particle stars & clean typography</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 2. TEXT & EFFECTS TAB -->
+                <div id="tab-text" class="tab-content hidden space-y-5">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Text Content & Styling</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Main Heading Title</label>
+                            <input type="text" id="inputMainText" value="Happy Children's Day!" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Subtitle Line</label>
+                            <input type="text" id="inputSubText" value="Celebrating Joy & Smiles ✨" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Channel / Watermark Tag</label>
+                            <input type="text" id="inputChannelText" value="RATUSER1.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-slate-300 block mb-1">Font Family</label>
+                                <select id="selectFont" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                    <option value="Fredoka One">Fredoka One (Playful)</option>
+                                    <option value="Orbitron">Orbitron (Gaming/Futuristic)</option>
+                                    <option value="Montserrat">Montserrat (Cinematic)</option>
+                                    <option value="Poppins">Poppins (Clean)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-slate-300 block mb-1">Text Fill Theme</label>
+                                <select id="selectTextFill" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                    <option value="gold">Golden Yellow</option>
+                                    <option value="neon">Neon Cyan/Pink</option>
+                                    <option value="rainbow">Multi-Color Gradient</option>
+                                    <option value="white">Pure White</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-xs font-semibold text-slate-300">Glow / Shadow Effect</span>
+                            <input type="checkbox" id="checkTextGlow" checked class="w-4 h-4 accent-indigo-500 rounded cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. BACKGROUND & VISUALS TAB -->
+                <div id="tab-background" class="tab-content hidden space-y-5">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Background & Particle Layer</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Background Style</label>
+                            <select id="selectBgPreset" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                <option value="sky">Sunny Sky Blue</option>
+                                <option value="synthwave">Synthwave Purple Grid</option>
+                                <option value="sunset">Magical Sunset</option>
+                                <option value="dark">Deep Space Black</option>
+                                <option value="image">Custom Uploaded Image</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Image Upload Input -->
+                        <div id="imageUploadWrapper" class="hidden">
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Upload Background File</label>
+                            <input type="file" id="bgImageFile" accept="image/*" class="w-full text-xs text-slate-400 bg-slate-950 rounded-lg border border-slate-700 p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white cursor-pointer">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-semibold text-slate-300 block">Active Particle Elements</label>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <label class="flex items-center gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer">
+                                    <input type="checkbox" id="checkBalloons" checked class="accent-indigo-500 rounded">
+                                    <span>Balloons</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer">
+                                    <input type="checkbox" id="checkConfetti" checked class="accent-indigo-500 rounded">
+                                    <span>Confetti</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer">
+                                    <input type="checkbox" id="checkStars" checked class="accent-indigo-500 rounded">
+                                    <span>Stars / Sparkles</span>
+                                </label>
+                                <label class="flex items-center gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer">
+                                    <input type="checkbox" id="checkSun" checked class="accent-indigo-500 rounded">
+                                    <span>Smiling Sun</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Animation Speed</label>
+                            <input type="range" id="rangeSpeed" min="0.5" max="2" step="0.1" value="1" class="w-full accent-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. AUDIO TAB -->
+                <div id="tab-audio" class="tab-content hidden space-y-5">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Audio Soundtracks</h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Audio Source</label>
+                            <select id="selectAudioSource" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                                <option value="synth_playful">Synthesized Happy Beats (Built-in)</option>
+                                <option value="synth_cyber">Synthesized Synthwave Arp (Built-in)</option>
+                                <option value="custom">Upload Custom MP3 Audio File</option>
+                                <option value="none">No Audio (Mute)</option>
+                            </select>
+                        </div>
+
+                        <div id="audioUploadWrapper" class="hidden">
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Upload Local Audio Track</label>
+                            <input type="file" id="audioFileInput" accept="audio/*" class="w-full text-xs text-slate-400 bg-slate-950 rounded-lg border border-slate-700 p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white cursor-pointer">
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-xs font-semibold text-slate-300">Enable Sound during Preview</span>
+                            <input type="checkbox" id="checkAudioPreview" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- RIGHT MAIN AREA: Canvas Interactive Visual Studio & Timeline Controls -->
+        <main class="flex-1 flex flex-col bg-slate-950 p-6 overflow-hidden">
+            
+            <!-- Canvas Visual Display Center Container -->
+            <div class="flex-1 flex items-center justify-center relative min-h-0">
+                <div class="canvas-container relative w-full h-full max-w-5xl max-h-[72vh] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                    <canvas id="studioCanvas" width="1920" height="1080" class="w-full h-full object-contain"></canvas>
+                </div>
+            </div>
+
+            <!-- BOTTOM TIMELINE & PLAYBACK TOOLBAR -->
+            <div class="h-20 mt-4 bg-slate-900/90 border border-slate-800 rounded-xl px-5 flex items-center justify-between gap-6 shrink-0">
+                
+                <!-- Playback Controls -->
+                <div class="flex items-center gap-3">
+                    <button id="btnPlayPause" class="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-md shadow-indigo-600/30">
+                        <i class="fa-solid fa-pause" id="playIcon"></i>
+                    </button>
+                    <button id="btnReset" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+
+                <!-- Timeline Scrubber & Duration -->
+                <div class="flex-1 flex items-center gap-4">
+                    <span id="currentTimeText" class="font-mono text-xs text-slate-400 w-12 text-right">00:00</span>
+                    <input type="range" id="timelineScrubber" min="0" max="100" value="0" step="0.1" class="flex-1 accent-indigo-500 h-2 bg-slate-800 rounded-lg cursor-pointer">
+                    <span id="totalDurationText" class="font-mono text-xs text-slate-400 w-12">00:05</span>
+                </div>
+
+                <!-- Video Length Duration Option & Direct Export -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span class="text-xs text-slate-400">Duration:</span>
+                        <select id="selectDuration" class="bg-transparent text-xs font-bold text-indigo-400 focus:outline-none cursor-pointer">
+                            <option value="5">5s</option>
+                            <option value="10" selected>10s</option>
+                            <option value="15">15s</option>
+                        </select>
+                    </div>
+
+                    <button id="btnStartExport" class="bg-gradient-to-r from-pink-500 via-rose-500 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-pink-500/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-circle-dot animate-pulse text-rose-300"></i> Render & Record Video
+                    </button>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- EXPORT PROGRESS MODAL OVERLAY -->
+    <div id="exportModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-5 text-center">
+            <div class="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-2xl mx-auto">
+                <i class="fa-solid fa-spinner animate-spin" id="exportSpinner"></i>
+                <i class="fa-solid fa-check text-emerald-400 hidden" id="exportSuccessIcon"></i>
+            </div>
+            
+            <div>
+                <h3 id="exportModalTitle" class="text-lg font-bold text-white">Recording & Encoding Video...</h3>
+                <p id="exportModalSub" class="text-xs text-slate-400 mt-1">Please wait while we render frame graphics and merge audio track.</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div id="exportProgressBar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+            </div>
+
+            <p id="exportPercentText" class="font-mono text-xs font-semibold text-indigo-400">0% Completed</p>
+
+            <button id="btnCloseModal" class="hidden w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-indigo-600/30">
+                <i class="fa-solid fa-download mr-1"></i> Save Video File (.webm)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements Initial Setup
+        const canvas = document.getElementById('studioCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Inputs & Controls
+        const inputMainText = document.getElementById('inputMainText');
+        const inputSubText = document.getElementById('inputSubText');
+        const inputChannelText = document.getElementById('inputChannelText');
+        const selectFont = document.getElementById('selectFont');
+        const selectTextFill = document.getElementById('selectTextFill');
+        const checkTextGlow = document.getElementById('checkTextGlow');
+        const selectBgPreset = document.getElementById('selectBgPreset');
+        const checkBalloons = document.getElementById('checkBalloons');
+        const checkConfetti = document.getElementById('checkConfetti');
+        const checkStars = document.getElementById('checkStars');
+        const checkSun = document.getElementById('checkSun');
+        const rangeSpeed = document.getElementById('rangeSpeed');
+        const selectDuration = document.getElementById('selectDuration');
+        const selectAudioSource = document.getElementById('selectAudioSource');
+
+        // Buttons
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const playIcon = document.getElementById('playIcon');
+        const btnReset = document.getElementById('btnReset');
+        const timelineScrubber = document.getElementById('timelineScrubber');
+        const currentTimeText = document.getElementById('currentTimeText');
+        const totalDurationText = document.getElementById('totalDurationText');
+        const btnStartExport = document.getElementById('btnStartExport');
+        const quickExportBtn = document.getElementById('quickExportBtn');
+
+        // Resolution Switchers
+        const resLandscapeBtn = document.getElementById('resLandscapeBtn');
+        const resPortraitBtn = document.getElementById('resPortraitBtn');
+
+        // Uploads
+        const bgImageFile = document.getElementById('bgImageFile');
+        const imageUploadWrapper = document.getElementById('imageUploadWrapper');
+        const audioFileInput = document.getElementById('audioFileInput');
+        const audioUploadWrapper = document.getElementById('audioUploadWrapper');
+        let uploadedBgImg = null;
+        let uploadedAudioBuffer = null;
+
+        // Export Modal DOM
+        const exportModal = document.getElementById('exportModal');
+        const exportProgressBar = document.getElementById('exportProgressBar');
+        const exportPercentText = document.getElementById('exportPercentText');
+        const exportModalTitle = document.getElementById('exportModalTitle');
+        const exportModalSub = document.getElementById('exportModalSub');
+        const exportSpinner = document.getElementById('exportSpinner');
+        const exportSuccessIcon = document.getElementById('exportSuccessIcon');
+        const btnCloseModal = document.getElementById('btnCloseModal');
+
+        // Animation State
+        let isPlaying = true;
+        let currentFrame = 0;
+        let durationSeconds = parseInt(selectDuration.value);
+        let totalFrames = durationSeconds * 60;
+        let activePreset = 'children';
+
+        // Particle Storage Array
+        let balloons = [];
+        let confetti = [];
+        let stars = [];
+
+        const colorPalette = ['#FF597B', '#FF8E9E', '#FFD1D1', '#00C4FF', '#FFC93C', '#4E9F3D', '#9A0860', '#A855F7'];
+
+        function initParticles() {
+            balloons = [];
+            for (let i = 0; i < 25; i++) {
+                balloons.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 600,
+                    radius: 30 + Math.random() * 25,
+                    speed: 1.5 + Math.random() * 2,
+                    color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
+                    sway: Math.random() * Math.PI * 2,
+                    swaySpeed: 0.02 + Math.random() * 0.03
+                });
+            }
+
+            confetti = [];
+            for (let i = 0; i < 120; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    width: 10 + Math.random() * 8,
+                    height: 16 + Math.random() * 10,
+                    speedY: 2.5 + Math.random() * 4,
+                    speedX: Math.sin(Math.random()) * 3,
+                    color: colorPalette[Math.floor(Math.random() * colorPalette.length)],
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: 0.05 + Math.random() * 0.05
+                });
+            }
+
+            stars = [];
+            for (let i = 0; i < 80; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: 3 + Math.random() * 8,
+                    color: '#FFF',
+                    twinkleSpeed: 0.03 + Math.random() * 0.05,
+                    alpha: Math.random()
+                });
+            }
+        }
+
+        function drawBackground() {
+            if (selectBgPreset.value === 'image' && uploadedBgImg) {
+                ctx.drawImage(uploadedBgImg, 0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+
+            if (selectBgPreset.value === 'synthwave') {
+                grad.addColorStop(0, '#0f051d');
+                grad.addColorStop(0.6, '#291147');
+                grad.addColorStop(1, '#531b6d');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Perspective Synthwave Grid
+                ctx.save();
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
+                ctx.lineWidth = 2;
+                const horizonY = canvas.height * 0.55;
+                
+                // Horizon Glow Line
+                ctx.beginPath();
+                ctx.moveTo(0, horizonY);
+                ctx.lineTo(canvas.width, horizonY);
+                ctx.strokeStyle = '#ff007f';
+                ctx.shadowColor = '#ff007f';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+
+                // Perspective Grid Lines
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+                const centerX = canvas.width / 2;
+                for (let x = -canvas.width; x <= canvas.width * 2; x += 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, canvas.height);
+                    ctx.lineTo(centerX + (x - centerX) * 0.1, horizonY);
+                    ctx.stroke();
+                }
+
+                // Horizontal Moving Grid Lines
+                const gridOffset = (currentFrame * 2 * parseFloat(rangeSpeed.value)) % 40;
+                for (let y = horizonY; y <= canvas.height; y += 15 + (y - horizonY) * 0.1) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y + gridOffset);
+                    ctx.lineTo(canvas.width, y + gridOffset);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                return;
+            }
+
+            if (selectBgPreset.value === 'sunset') {
+                grad.addColorStop(0, '#ff4e50');
+                grad.addColorStop(1, '#f9d423');
+            } else if (selectBgPreset.value === 'dark') {
+                grad.addColorStop(0, '#050508');
+                grad.addColorStop(1, '#111827');
+            } else { // Sky default
+                grad.addColorStop(0, '#00b4db');
+                grad.addColorStop(1, '#0083b0');
+            }
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSun() {
+            if (!checkSun.checked) return;
+
+            const sunX = canvas.width * 0.12;
+            const sunY = canvas.height * 0.18;
+            const sunRadius = 70;
+
+            ctx.save();
+            ctx.translate(sunX, sunY);
+
+            // Sun Rays rotation
+            ctx.rotate(currentFrame * 0.01 * parseFloat(rangeSpeed.value));
+            ctx.fillStyle = '#FFD700';
+            for (let i = 0; i < 12; i++) {
+                ctx.rotate((Math.PI * 2) / 12);
+                ctx.fillRect(sunRadius + 10, -6, 25, 12);
+            }
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(sunX, sunY);
+            // Sun Body Face
+            ctx.beginPath();
+            ctx.arc(0, 0, sunRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFCC00';
+            ctx.fill();
+            ctx.strokeStyle = '#FFA500';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // Eyes & Smile Face
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(-22, -12, 8, 0, Math.PI * 2);
+            ctx.arc(22, -12, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cheeks
+            ctx.fillStyle = 'rgba(255, 99, 71, 0.6)';
+            ctx.beginPath();
+            ctx.arc(-28, 12, 12, 0, Math.PI * 2);
+            ctx.arc(28, 12, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.beginPath();
+            ctx.arc(0, 8, 32, 0.15 * Math.PI, 0.85 * Math.PI);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#222';
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawBalloons() {
+            if (!checkBalloons.checked) return;
+            const speedFactor = parseFloat(rangeSpeed.value);
+
+            balloons.forEach((b) => {
+                if (isPlaying) {
+                    b.y -= b.speed * speedFactor;
+                    b.sway += b.swaySpeed * speedFactor;
+                    b.x += Math.sin(b.sway) * 1.2;
+
+                    if (b.y < -b.radius * 2) {
+                        b.y = canvas.height + b.radius + Math.random() * 100;
+                        b.x = Math.random() * canvas.width;
+                    }
+                }
+
+                ctx.save();
+                // String
+                ctx.beginPath();
+                ctx.moveTo(b.x, b.y + b.radius);
+                ctx.quadraticCurveTo(b.x + Math.sin(b.sway) * 15, b.y + b.radius + 40, b.x, b.y + b.radius + 80);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Balloon Body
+                ctx.beginPath();
+                ctx.ellipse(b.x, b.y, b.radius, b.radius * 1.25, 0, 0, Math.PI * 2);
+                ctx.fillStyle = b.color;
+                ctx.fill();
+
+                // Highlight
+                ctx.beginPath();
+                ctx.ellipse(b.x - b.radius * 0.3, b.y - b.radius * 0.35, b.radius * 0.25, b.radius * 0.4, -0.4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawConfetti() {
+            if (!checkConfetti.checked) return;
+            const speedFactor = parseFloat(rangeSpeed.value);
+
+            confetti.forEach((c) => {
+                if (isPlaying) {
+                    c.y += c.speedY * speedFactor;
+                    c.x += c.speedX * speedFactor;
+                    c.rotation += c.rotationSpeed * speedFactor;
+
+                    if (c.y > canvas.height) {
+                        c.y = -20;
+                        c.x = Math.random() * canvas.width;
+                    }
+                }
+
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.rotation);
+                ctx.fillStyle = c.color;
+                ctx.fillRect(-c.width / 2, -c.height / 2, c.width, c.height);
+                ctx.restore();
+            });
+        }
+
+        function drawStars() {
+            if (!checkStars.checked) return;
+
+            stars.forEach((s) => {
+                if (isPlaying) {
+                    s.alpha += s.twinkleSpeed * parseFloat(rangeSpeed.value);
+                    if (s.alpha > 1 || s.alpha < 0.2) {
+                        s.twinkleSpeed = -s.twinkleSpeed;
+                    }
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.abs(s.alpha);
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawMainText() {
+            const mainText = inputMainText.value;
+            const subText = inputSubText.value;
+            const channelText = inputChannelText.value;
+
+            ctx.save();
+            ctx.textAlign = 'center';
+
+            // Subtle animation bounces
+            const speedFactor = parseFloat(rangeSpeed.value);
+            const bounce = Math.sin(currentFrame * 0.08 * speedFactor) * 12;
+
+            // Main Text Font Setup
+            const selectedFontName = selectFont.value;
+            const mainFontSize = canvas.width < 1200 ? 64 : 92;
+            ctx.font = `900 ${mainFontSize}px "${selectedFontName}", sans-serif`;
+
+            // Text Gradient Fill
+            let textFillStyle;
+            if (selectTextFill.value === 'gold') {
+                textFillStyle = ctx.createLinearGradient(0, canvas.height / 2 - 80, 0, canvas.height / 2 + 40);
+                textFillStyle.addColorStop(0, '#FFE259');
+                textFillStyle.addColorStop(1, '#FFA751');
+            } else if (selectTextFill.value === 'neon') {
+                textFillStyle = ctx.createLinearGradient(0, canvas.height / 2 - 80, canvas.width, canvas.height / 2);
+                textFillStyle.addColorStop(0, '#00E5FF');
+                textFillStyle.addColorStop(1, '#FF007F');
+            } else if (selectTextFill.value === 'rainbow') {
+                textFillStyle = ctx.createLinearGradient(canvas.width * 0.2, 0, canvas.width * 0.8, 0);
+                textFillStyle.addColorStop(0, '#FF0055');
+                textFillStyle.addColorStop(0.3, '#FFCC00');
+                textFillStyle.addColorStop(0.6, '#00FF66');
+                textFillStyle.addColorStop(1, '#00CCFF');
+            } else {
+                textFillStyle = '#FFFFFF';
+            }
+
+            if (checkTextGlow.checked) {
+                ctx.shadowColor = selectTextFill.value === 'neon' ? '#00E5FF' : 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 25;
+            }
+
+            // Outline Stroke
+            ctx.lineWidth = 14;
+            ctx.strokeStyle = '#000000';
+            ctx.lineJoin = 'round';
+            ctx.strokeText(mainText, canvas.width / 2, canvas.height / 2 + bounce);
+
+            ctx.fillStyle = textFillStyle;
+            ctx.fillText(mainText, canvas.width / 2, canvas.height / 2 + bounce);
+
+            // Subtitle Line
+            if (subText) {
+                const subFontSize = canvas.width < 1200 ? 28 : 38;
+                ctx.font = `700 ${subFontSize}px "${selectedFontName}", sans-serif`;
+                ctx.shadowBlur = checkTextGlow.checked ? 10 : 0;
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+                ctx.strokeText(subText, canvas.width / 2, canvas.height / 2 + 110 + bounce * 0.5);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText(subText, canvas.width / 2, canvas.height / 2 + 110 + bounce * 0.5);
+            }
+
+            // Channel Name / Watermark Tag at Bottom Right
+            if (channelText) {
+                ctx.textAlign = 'right';
+                ctx.font = `600 24px "Orbitron", sans-serif`;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 8;
+                ctx.fillText(`@${channelText}`, canvas.width - 40, canvas.height - 40);
+            }
+
+            ctx.restore();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+            drawSun();
+            drawStars();
+            drawBalloons();
+            drawConfetti();
+            drawMainText();
+
+            if (isPlaying) {
+                currentFrame++;
+                if (currentFrame >= totalFrames) {
+                    currentFrame = 0; // Loop timeline
+                }
+            }
+
+            // Sync Timeline UI Elements
+            const currentSec = (currentFrame / 60).toFixed(1);
+            timelineScrubber.value = (currentFrame / totalFrames) * 100;
+            currentTimeText.innerText = `00:${currentSec.padStart(4, '0')}`;
+
+            requestAnimationFrame(render);
+        }
+
+        let audioCtx = null;
+
+        function generateAudioTrack(duration) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const sampleRate = audioCtx.sampleRate;
+            const numFrames = sampleRate * duration;
+            const audioBuffer = audioCtx.createBuffer(2, numFrames, sampleRate);
+
+            const leftChannel = audioBuffer.getChannelData(0);
+            const rightChannel = audioBuffer.getChannelData(1);
+
+            const isCyber = selectAudioSource.value === 'synth_cyber';
+
+            for (let i = 0; i < numFrames; i++) {
+                const t = i / sampleRate;
+                let sample = 0;
+
+                if (isCyber) {
+                    // Synthwave Bass Arp
+                    const freq = 110 * Math.pow(2, Math.floor((t * 8) % 4) / 12);
+                    sample = Math.sin(2 * Math.PI * freq * t) * 0.3;
+                    sample += (Math.random() - 0.5) * 0.05; // Snare noise
+                } else {
+                    // Happy Bright Melody Tune
+                    const notes = [261.63, 329.63, 392.00, 523.25]; // C E G C
+                    const noteFreq = notes[Math.floor((t * 4) % notes.length)];
+                    sample = Math.sin(2 * Math.PI * noteFreq * t) * 0.25;
+                    sample += Math.sin(2 * Math.PI * (noteFreq * 1.5) * t) * 0.1;
+                }
+
+                leftChannel[i] = sample;
+                rightChannel[i] = sample;
+            }
+
+            return audioBuffer;
+        }
+
+        async function exportVideo() {
+            isPlaying = false;
+            currentFrame = 0;
+
+            exportModal.classList.remove('hidden');
+            exportModal.classList.add('flex');
+            exportProgressBar.style.width = '0%';
+            exportPercentText.innerText = '0% Completed';
+            exportModalTitle.innerText = 'Recording & Encoding Video...';
+            exportModalSub.innerText = 'Capturing 60FPS motion graphic frames & audio buffer...';
+            exportSpinner.classList.remove('hidden');
+            exportSuccessIcon.classList.add('hidden');
+            btnCloseModal.classList.add('hidden');
+
+            const stream = canvas.captureStream(60); // 60 FPS
+            let finalStream = stream;
+
+            // Audio Track Integration
+            if (selectAudioSource.value !== 'none') {
+                try {
+                    const actx = new (window.AudioContext || window.webkitAudioContext)();
+                    const dest = actx.createMediaStreamDestination();
+
+                    let audioSourceNode;
+                    if (selectAudioSource.value === 'custom' && uploadedAudioBuffer) {
+                        audioSourceNode = actx.createBufferSource();
+                        audioSourceNode.buffer = uploadedAudioBuffer;
+                    } else {
+                        audioSourceNode = actx.createBufferSource();
+                        audioSourceNode.buffer = generateAudioTrack(durationSeconds);
+                    }
+
+                    audioSourceNode.connect(dest);
+                    audioSourceNode.start();
+
+                    // Combine Canvas Video Track + Audio Track
+                    const audioTrack = dest.stream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        finalStream.addTrack(audioTrack);
+                    }
+                } catch (err) {
+                    console.warn('Audio Track Capture Note:', err);
+                }
+            }
+
+            let mediaRecorder;
+            let chunks = [];
+
+            try {
+                mediaRecorder = new MediaRecorder(finalStream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
+            } catch (e) {
+                mediaRecorder = new MediaRecorder(finalStream, { mimeType: 'video/webm' });
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            let renderFrameIndex = 0;
+            isPlaying = true;
+
+            const exportInterval = setInterval(() => {
+                renderFrameIndex++;
+                const progress = Math.min(100, Math.round((renderFrameIndex / totalFrames) * 100));
+                exportProgressBar.style.width = `${progress}%`;
+                exportPercentText.innerText = `${progress}% Completed`;
+
+                if (renderFrameIndex >= totalFrames) {
+                    clearInterval(exportInterval);
+                    mediaRecorder.stop();
+                }
+            }, 1000 / 60);
+
+            mediaRecorder.start();
+
+            mediaRecorder.onstop = () => {
+                isPlaying = true;
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const videoUrl = URL.createObjectURL(blob);
+
+                exportSpinner.classList.add('hidden');
+                exportSuccessIcon.classList.remove('hidden');
+                exportModalTitle.innerText = 'Video Generated Successfully!';
+                exportModalSub.innerText = 'Your high-quality clip is ready to download for YouTube.';
+                btnCloseModal.classList.remove('hidden');
+
+                btnCloseModal.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = videoUrl;
+                    a.download = `clipstudio_${activePreset}_${Date.now()}.webm`;
+                    a.click();
+                    exportModal.classList.add('hidden');
+                    exportModal.classList.remove('flex');
+                };
+            };
+        }
+
+        // Preset Click Switch
+        document.querySelectorAll('.preset-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.preset-card').forEach(c => {
+                    c.classList.remove('border-indigo-500/80', 'bg-slate-800');
+                    c.classList.add('border-slate-700/60', 'bg-slate-800/40');
+                });
+                card.classList.add('border-indigo-500/80', 'bg-slate-800');
+                
+                const preset = card.dataset.preset;
+                activePreset = preset;
+
+                if (preset === 'children') {
+                    inputMainText.value = "Happy Children's Day!";
+                    inputSubText.value = "Celebrating Joy & Smiles ✨";
+                    selectFont.value = "Fredoka One";
+                    selectBgPreset.value = "sky";
+                    selectTextFill.value = "gold";
+                    checkBalloons.checked = true;
+                    checkConfetti.checked = true;
+                    checkSun.checked = true;
+                    checkStars.checked = true;
+                    selectAudioSource.value = "synth_playful";
+                } else if (preset === 'gaming') {
+                    inputMainText.value = "GAME ON STUDIO";
+                    inputSubText.value = "LIKE & SUBSCRIBE FOR MORE";
+                    selectFont.value = "Orbitron";
+                    selectBgPreset.value = "synthwave";
+                    selectTextFill.value = "neon";
+                    checkBalloons.checked = false;
+                    checkConfetti.checked = false;
+                    checkSun.checked = false;
+                    checkStars.checked = true;
+                    selectAudioSource.value = "synth_cyber";
+                } else if (preset === 'cinematic') {
+                    inputMainText.value = "THE NEXT CHAPTER";
+                    inputSubText.value = "A FILM BY RATUSER1.0";
+                    selectFont.value = "Montserrat";
+                    selectBgPreset.value = "dark";
+                    selectTextFill.value = "gold";
+                    checkBalloons.checked = false;
+                    checkConfetti.checked = false;
+                    checkSun.checked = false;
+                    checkStars.checked = true;
+                    selectAudioSource.value = "synth_cyber";
+                }
+                initParticles();
+            });
+        });
+
+        // Tab Navigation Switch
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+                btn.classList.add('active', 'text-white');
+                document.getElementById(btn.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // Toggle Resolution Format
+        resLandscapeBtn.addEventListener('click', () => {
+            canvas.width = 1920;
+            canvas.height = 1080;
+            resLandscapeBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all bg-indigo-600 text-white shadow";
+            resPortraitBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-700";
+            initParticles();
+        });
+
+        resPortraitBtn.addEventListener('click', () => {
+            canvas.width = 1080;
+            canvas.height = 1920;
+            resPortraitBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all bg-indigo-600 text-white shadow";
+            resLandscapeBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-700";
+            initParticles();
+        });
+
+        // Play/Pause & Controls
+        btnPlayPause.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+        });
+
+        btnReset.addEventListener('click', () => {
+            currentFrame = 0;
+            initParticles();
+        });
+
+        selectDuration.addEventListener('change', () => {
+            durationSeconds = parseInt(selectDuration.value);
+            totalFrames = durationSeconds * 60;
+            totalDurationText.innerText = `00:${durationSeconds.toString().padStart(2, '0')}`;
+        });
+
+        timelineScrubber.addEventListener('input', (e) => {
+            currentFrame = Math.floor((e.target.value / 100) * totalFrames);
+        });
+
+        selectBgPreset.addEventListener('change', () => {
+            if (selectBgPreset.value === 'image') {
+                imageUploadWrapper.classList.remove('hidden');
+            } else {
+                imageUploadWrapper.classList.add('hidden');
+            }
+        });
+
+        bgImageFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedBgImg = img;
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        selectAudioSource.addEventListener('change', () => {
+            if (selectAudioSource.value === 'custom') {
+                audioUploadWrapper.classList.remove('hidden');
+            } else {
+                audioUploadWrapper.classList.add('hidden');
+            }
+        });
+
+        audioFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const tempAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    tempAudioCtx.decodeAudioData(event.target.result, (buffer) => {
+                        uploadedAudioBuffer = buffer;
+                        document.getElementById('audioStatusBadge').classList.remove('hidden');
+                        document.getElementById('audioStatusBadge').classList.add('flex');
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        btnStartExport.addEventListener('click', exportVideo);
+        quickExportBtn.addEventListener('click', exportVideo);
+
+        // Window Onload Initialization
+        window.onload = () => {
+            initParticles();
+            render();
+        };
+    </script>
+</body>
+</html>
